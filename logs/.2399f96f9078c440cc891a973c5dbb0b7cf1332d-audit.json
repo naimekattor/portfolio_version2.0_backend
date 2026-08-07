@@ -1,0 +1,20 @@
+{
+    "keep": {
+        "days": true,
+        "amount": 14
+    },
+    "auditLog": "C:\\Users\\naim dev\\Desktop\\naim_s_project\\portfolio_version2.0\\backend\\logs\\.2399f96f9078c440cc891a973c5dbb0b7cf1332d-audit.json",
+    "files": [
+        {
+            "date": 1786009437341,
+            "name": "C:\\Users\\naim dev\\Desktop\\naim_s_project\\portfolio_version2.0\\backend\\logs\\2026-08-06-combined.log",
+            "hash": "7d5d9ee0ebb72afb6727447eb9b0368826b8d622640b886ebbe286e85cc6808a"
+        },
+        {
+            "date": 1786069839022,
+            "name": "C:\\Users\\naim dev\\Desktop\\naim_s_project\\portfolio_version2.0\\backend\\logs\\2026-08-07-combined.log",
+            "hash": "8932ce409cb74f80a46a72a89c2c883b3d14f3b9c2228579991990dd4546da29"
+        }
+    ],
+    "hashType": "sha256"
+}

@@ -1,0 +1,8 @@
+{
+  "watch": ["src"],
+  "ext": "ts,js,json",
+  "ignore": ["src/**/*.spec.ts", "logs/*", "uploads/*"],
+  "exec": "npx tsx src/server.ts",
+  "restartable": "rs",
+  "delay": "1000"
+}

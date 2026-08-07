@@ -1,0 +1,385 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum AdminRole {
+  SUPER_ADMIN
+  ADMIN
+  EDITOR
+}
+
+enum ContentStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum ReplyStatus {
+  UNREPLIED
+  REPLIED
+  IN_PROGRESS
+}
+
+enum SubscriberStatus {
+  ACTIVE
+  UNSUBSCRIBED
+  BOUNCED
+}
+
+model Admin {
+  id           String         @id @default(uuid())
+  email        String         @unique
+  password     String
+  name         String
+  avatar       String?
+  role         AdminRole      @default(ADMIN)
+  roleId       String?
+  roleRef      Role?          @relation(fields: [roleId], references: [id], onDelete: SetNull)
+  isVerified   Boolean        @default(true)
+  sessions     AdminSession[]
+  auditLogs    AuditLog[]
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  deletedAt    DateTime?
+
+  @@map("admins")
+}
+
+model Role {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String?
+  permissions String[]
+  admins      Admin[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("roles")
+}
+
+model Permission {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+
+  @@map("permissions")
+}
+
+model AdminSession {
+  id           String   @id @default(uuid())
+  adminId      String
+  admin        Admin    @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  token        String   @unique
+  refreshToken String   @unique
+  ipAddress    String?
+  userAgent    String?
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+
+  @@map("admin_sessions")
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  adminId   String?
+  admin     Admin?   @relation(fields: [adminId], references: [id], onDelete: SetNull)
+  action    String
+  entity    String
+  entityId  String?
+  details   String?
+  ipAddress String?
+  createdAt DateTime @default(now())
+
+  @@map("audit_logs")
+}
+
+model Contact {
+  id          String      @id @default(uuid())
+  name        String
+  email       String
+  phone       String?
+  subject     String
+  message     String
+  isRead      Boolean     @default(false)
+  isArchived  Boolean     @default(false)
+  replyStatus ReplyStatus @default(UNREPLIED)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@map("contacts")
+}
+
+model NewsletterSubscriber {
+  id             String           @id @default(uuid())
+  email          String           @unique
+  status         SubscriberStatus @default(ACTIVE)
+  subscribedAt   DateTime         @default(now())
+  unsubscribedAt DateTime?
+
+  @@map("newsletter_subscribers")
+}
+
+model Visitor {
+  id         String     @id @default(uuid())
+  visitorId  String     @unique
+  ip         String?
+  country    String?
+  city       String?
+  browser    String?
+  device     String?
+  os         String?
+  language   String?
+  screenSize String?
+  sessions   Session[]
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+
+  @@index([visitorId])
+  @@index([country])
+  @@map("visitors")
+}
+
+model Session {
+  id          String     @id @default(uuid())
+  visitorId   String
+  visitor     Visitor    @relation(fields: [visitorId], references: [visitorId], onDelete: Cascade)
+  landingPage String?
+  exitPage    String?
+  duration    Int        @default(0) // seconds
+  isBounce    Boolean    @default(true)
+  pageViews   PageView[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@index([visitorId])
+  @@map("sessions")
+}
+
+model PageView {
+  id          String   @id @default(uuid())
+  sessionId   String
+  session     Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  url         String
+  path        String
+  title       String?
+  referrer    String?
+  utmSource   String?
+  utmMedium   String?
+  utmCampaign String?
+  timeOnPage  Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  @@index([sessionId])
+  @@index([path])
+  @@map("page_views")
+}
+
+model AnalyticsDaily {
+  id             String   @id @default(uuid())
+  date           String   @unique // YYYY-MM-DD
+  totalVisitors  Int      @default(0)
+  uniqueVisitors Int      @default(0)
+  pageViews      Int      @default(0)
+  avgDuration    Float    @default(0)
+  bounceRate     Float    @default(0)
+  retentionDay1  Float    @default(0)
+  retentionDay7  Float    @default(0)
+  retentionDay14 Float    @default(0)
+  retentionDay30 Float    @default(0)
+  createdAt      DateTime @default(now())
+
+  @@map("analytics_daily")
+}
+
+model AnalyticsMonthly {
+  id             String   @id @default(uuid())
+  month          String   @unique // YYYY-MM
+  totalVisitors  Int      @default(0)
+  uniqueVisitors Int      @default(0)
+  pageViews      Int      @default(0)
+  avgDuration    Float    @default(0)
+  bounceRate     Float    @default(0)
+  createdAt      DateTime @default(now())
+
+  @@map("analytics_monthly")
+}
+
+model Project {
+  id           String        @id @default(uuid())
+  title        String
+  slug         String        @unique
+  description  String
+  impact       String?
+  technologies String[]
+  images       String[]
+  githubUrl    String?
+  liveUrl      String?
+  category     String        @default("Web App")
+  featured     Boolean       @default(false)
+  order        Int           @default(0)
+  status       ContentStatus @default(PUBLISHED)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  deletedAt    DateTime?
+
+  @@index([slug])
+  @@index([featured])
+  @@map("projects")
+}
+
+model Skill {
+  id           String   @id @default(uuid())
+  name         String
+  icon         String?
+  category     String   @default("Frontend")
+  percentage   Int      @default(80)
+  displayOrder Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("skills")
+}
+
+model Experience {
+  id               String   @id @default(uuid())
+  company          String
+  position         String
+  duration         String
+  startDate        String?
+  endDate          String?
+  isCurrent        Boolean  @default(false)
+  description      String?
+  responsibilities String[]
+  technologies     String[]
+  order            Int      @default(0)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@map("experiences")
+}
+
+model Education {
+  id          String   @id @default(uuid())
+  institution String
+  degree      String
+  field       String
+  startDate   String?
+  endDate     String?
+  grade       String?
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("educations")
+}
+
+model Certificate {
+  id            String   @id @default(uuid())
+  title         String
+  issuer        String
+  issueDate     String?
+  expiryDate    String?
+  credentialUrl String?
+  credentialId  String?
+  order         Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("certificates")
+}
+
+model Blog {
+  id             String        @id @default(uuid())
+  title          String
+  slug           String        @unique
+  excerpt        String?
+  content        String
+  featuredImage  String?
+  status         ContentStatus @default(DRAFT)
+  isFeatured     Boolean       @default(false)
+  seoTitle       String?
+  seoDescription String?
+  readingTime    Int           @default(5)
+  publishedAt    DateTime?
+  categoryId     String?
+  category       Category?     @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  tags           BlogTag[]
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  deletedAt      DateTime?
+
+  @@index([slug])
+  @@map("blogs")
+}
+
+model Category {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  slug        String   @unique
+  description String?
+  blogs       Blog[]
+  createdAt   DateTime @default(now())
+
+  @@map("categories")
+}
+
+model Tag {
+  id        String    @id @default(uuid())
+  name      String    @unique
+  slug      String    @unique
+  blogs     BlogTag[]
+  createdAt DateTime  @default(now())
+
+  @@map("tags")
+}
+
+model BlogTag {
+  blogId String
+  tagId  String
+  blog   Blog   @relation(fields: [blogId], references: [id], onDelete: Cascade)
+  tag    Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([blogId, tagId])
+  @@map("blog_tags")
+}
+
+model Media {
+  id           String   @id @default(uuid())
+  filename     String
+  originalName String
+  mimeType     String
+  size         Int
+  url          String
+  path         String
+  folder       String   @default("general")
+  createdAt    DateTime @default(now())
+
+  @@map("media")
+}
+
+model SiteSetting {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  value     String   @db.Text
+  group     String   @default("general")
+  updatedAt DateTime @updatedAt
+
+  @@map("site_settings")
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  title     String
+  message   String
+  type      String   @default("info")
+  isRead    Boolean  @default(false)
+  link      String?
+  createdAt DateTime @default(now())
+
+  @@map("notifications")
+}
