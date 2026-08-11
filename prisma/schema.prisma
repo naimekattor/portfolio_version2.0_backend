@@ -223,6 +223,7 @@ model Project {
   featured     Boolean       @default(false)
   order        Int           @default(0)
   status       ContentStatus @default(PUBLISHED)
+  isAiEnabled  Boolean       @default(true)
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
   deletedAt    DateTime?
@@ -239,6 +240,7 @@ model Skill {
   category     String   @default("Frontend")
   percentage   Int      @default(80)
   displayOrder Int      @default(0)
+  isAiEnabled  Boolean  @default(true)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -257,6 +259,7 @@ model Experience {
   responsibilities String[]
   technologies     String[]
   order            Int      @default(0)
+  isAiEnabled      Boolean  @default(true)
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
@@ -272,6 +275,7 @@ model Education {
   endDate     String?
   grade       String?
   order       Int      @default(0)
+  isAiEnabled Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -287,6 +291,7 @@ model Certificate {
   credentialUrl String?
   credentialId  String?
   order         Int      @default(0)
+  isAiEnabled   Boolean  @default(true)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
@@ -302,6 +307,7 @@ model Blog {
   featuredImage  String?
   status         ContentStatus @default(DRAFT)
   isFeatured     Boolean       @default(false)
+  isAiEnabled    Boolean       @default(true)
   seoTitle       String?
   seoDescription String?
   readingTime    Int           @default(5)
@@ -383,3 +389,60 @@ model Notification {
 
   @@map("notifications")
 }
+
+enum RagDocumentStatus {
+  PENDING
+  INDEXED
+  FAILED
+}
+
+model RagDocument {
+  id         String            @id @default(uuid())
+  title      String
+  source     String            // E.g. Model name or explicit source
+  sourceType String            // E.g. 'Project', 'Blog'
+  content    String            @db.Text
+  metadata   Json?             // Storing source id, language, etc.
+  status     RagDocumentStatus @default(PENDING)
+  checksum   String            @unique // SHA-256
+  createdAt  DateTime          @default(now())
+  updatedAt  DateTime          @updatedAt
+  indexedAt  DateTime?
+
+  chunks     RagChunk[]
+
+  @@map("rag_documents")
+}
+
+model RagChunk {
+  id         String      @id @default(uuid())
+  documentId String
+  document   RagDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  content    String      @db.Text
+  chunkIndex Int
+  tokenCount Int         @default(0)
+  metadata   Json?       // chunk specific metadata
+  // The vector embedding. This is an unsupported type in standard Prisma.
+  embedding  Unsupported("vector(768)")?
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+
+  @@index([documentId])
+  @@map("rag_chunks")
+}
+
+model RagQueryLog {
+  id               String   @id @default(uuid())
+  query            String   @db.Text
+  response         String?  @db.Text
+  durationMs       Int      @default(0)
+  retrievedChunks  Int      @default(0)
+  similarityScores Float[]
+  tokenUsage       Int      @default(0)
+  isSuccessful     Boolean  @default(true)
+  errorMessage     String?
+  createdAt        DateTime @default(now())
+
+  @@map("rag_query_logs")
+}
+

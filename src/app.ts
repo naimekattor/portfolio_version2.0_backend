@@ -23,6 +23,7 @@ import { newsletterRouter } from './modules/newsletter/newsletter.routes.js';
 import { mediaRouter } from './modules/media/media.routes.js';
 import { siteSettingsRouter } from './modules/site-settings/site-settings.routes.js';
 import { dashboardRouter } from './modules/dashboard/dashboard.routes.js';
+import { aiRouter } from './modules/ai/ai.routes.js';
 
 export function createApp(): Express {
   const app = express();
@@ -87,6 +88,7 @@ export function createApp(): Express {
   apiV1.use('/newsletter', newsletterRouter);
   apiV1.use('/media', mediaRouter);
   apiV1.use('/site-settings', siteSettingsRouter);
+  apiV1.use('/ai', aiRouter);
 
   app.use('/api/v1', apiV1);
 
