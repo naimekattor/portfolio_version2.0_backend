@@ -63,16 +63,5 @@
     "ts-node": "^10.9.2",
     "tsx": "^4.23.7",
     "typescript": "^7.0.2"
-  },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "@prisma/client",
-      "@prisma/engines",
-      "bcrypt",
-      "bcryptjs",
-      "esbuild",
-      "prisma",
-      "sharp"
-    ]
   }
 }
