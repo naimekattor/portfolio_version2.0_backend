@@ -21,7 +21,7 @@ router.post('/', async (req: Request, res: Response, next: NextFunction) => {
     const result = contactSchema.safeParse(req.body);
     if (!result.success) return res.status(400).json({ success: false, errors: result.error.issues });
 
-    const contact = await prisma.contact.create({ data: req.body });
+    const contact = await prisma.contact.create({ data: result.data });
     notifyNewContact(contact);
 
     // Send email notifications asynchronously without blocking HTTP response
