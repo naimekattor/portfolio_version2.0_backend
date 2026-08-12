@@ -98,7 +98,7 @@ export class AiController {
   
   deleteDocument = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { id } = req.params;
+      const id = req.params.id as string;
       await this.prisma.ragDocument.delete({ where: { id } });
       res.status(200).json({ success: true, message: 'Document removed from index.' });
     } catch (error) {
