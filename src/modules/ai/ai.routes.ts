@@ -6,7 +6,7 @@ import { RagRepository } from './rag/rag.repository.js';
 import { ChunkingService } from './rag/chunking.service.js';
 import { GeminiEmbeddingProvider } from './embedding/gemini-embedding.provider.js';
 import { AnthropicLlmProvider } from './llm/anthropic-llm.provider.js';
-import prisma from '../../database/prisma.js';
+import { prisma } from '../../database/prisma.js';
 import { authenticate } from '../../middlewares/auth.js';
 
 const router = Router();
@@ -17,7 +17,7 @@ const embeddingProvider = new GeminiEmbeddingProvider();
 const llmProvider = new AnthropicLlmProvider();
 const chunkingService = new ChunkingService(3000);
 
-const ragService = new RagService(ragRepo, embeddingProvider, llmProvider);
+const ragService = new RagService(ragRepo, embeddingProvider, llmProvider, prisma);
 const ingestionService = new IngestionService(prisma, embeddingProvider, chunkingService, ragRepo);
 
 const controller = new AiController(ragService, ingestionService, prisma);
