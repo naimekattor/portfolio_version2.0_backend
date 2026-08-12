@@ -7,7 +7,7 @@ import { ChunkingService } from './rag/chunking.service.js';
 import { GeminiEmbeddingProvider } from './embedding/gemini-embedding.provider.js';
 import { AnthropicLlmProvider } from './llm/anthropic-llm.provider.js';
 import prisma from '../../database/prisma.js';
-import { protect } from '../../middlewares/auth.js';
+import { authenticate } from '../../middlewares/auth.js';
 
 const router = Router();
 
@@ -27,9 +27,9 @@ router.post('/chat', controller.chat);
 router.post('/search', controller.search);
 
 // Admin RAG Management Routes
-router.get('/admin/rag/status', protect, controller.getStatus);
-router.post('/admin/rag/index', protect, controller.indexPortfolio);
-router.get('/admin/rag/documents', protect, controller.getDocuments);
-router.delete('/admin/rag/documents/:id', protect, controller.deleteDocument);
+router.get('/admin/rag/status', authenticate, controller.getStatus);
+router.post('/admin/rag/index', authenticate, controller.indexPortfolio);
+router.get('/admin/rag/documents', authenticate, controller.getDocuments);
+router.delete('/admin/rag/documents/:id', authenticate, controller.deleteDocument);
 
 export const aiRouter = router;
