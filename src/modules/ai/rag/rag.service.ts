@@ -28,8 +28,8 @@ export class RagService {
       // 1. Generate query embedding
       const queryEmbedding = await this.embeddingProvider.generateEmbedding(query);
 
-      // 2. Retrieve top chunks (Top K = 5, threshold = 0.5)
-      const chunks = await this.ragRepo.searchSimilarChunks(queryEmbedding, 5, 0.5);
+      // 2. Retrieve top chunks (Top K = 15, threshold = 0.10 for local embeddings)
+      const chunks = await this.ragRepo.searchSimilarChunks(queryEmbedding, 15, 0.10);
 
       if (chunks.length === 0) {
         await this.logQuery(query, "No context found.", startTime, 0, [], true);
