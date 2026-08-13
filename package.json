@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "nodemon",
     "dev:tsx": "tsx watch src/server.ts",
-    "build": "tsc",
+    "build": "prisma generate && tsc",
     "start": "node dist/server.js",
     "prisma:generate": "prisma generate",
     "prisma:push": "prisma db push"
