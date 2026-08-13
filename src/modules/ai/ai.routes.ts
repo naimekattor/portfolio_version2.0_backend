@@ -5,7 +5,7 @@ import { IngestionService } from './rag/ingestion.service.js';
 import { RagRepository } from './rag/rag.repository.js';
 import { ChunkingService } from './rag/chunking.service.js';
 import { GeminiEmbeddingProvider } from './embedding/gemini-embedding.provider.js';
-import { AnthropicLlmProvider } from './llm/anthropic-llm.provider.js';
+import { GroqLlmProvider } from './llm/groq-llm.provider.js';
 import { prisma } from '../../database/prisma.js';
 import { authenticate } from '../../middlewares/auth.js';
 
@@ -14,7 +14,7 @@ const router = Router();
 // DI Setup
 const ragRepo = new RagRepository(prisma);
 const embeddingProvider = new GeminiEmbeddingProvider();
-const llmProvider = new AnthropicLlmProvider();
+const llmProvider = new GroqLlmProvider();
 const chunkingService = new ChunkingService(3000);
 
 const ragService = new RagService(ragRepo, embeddingProvider, llmProvider, prisma);

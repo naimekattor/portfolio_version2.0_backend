@@ -30,6 +30,7 @@ const envSchema = z.object({
   // AI Configuration
   GEMINI_API_KEY: z.string().optional(),
   ANTHROPIC_API_KEY: z.string().optional(),
+  GROQ_API_KEY: z.string().optional(),
 });
 
 export const env = envSchema.parse(process.env);
