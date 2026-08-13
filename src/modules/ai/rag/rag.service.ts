@@ -46,7 +46,7 @@ export class RagService {
       const similarityScores: number[] = [];
 
       for (const chunk of chunks) {
-        context += `[Source: ${chunk.title} (${chunk.sourceType})]\n${chunk.content}\n\n`;
+        context += `[Source: ${chunk.title} (${chunk.sourceType}) | ID: ${chunk.documentId}]\n${chunk.content}\n\n`;
         similarityScores.push(chunk.similarity);
         
         if (!addedSources.has(chunk.documentId)) {
@@ -83,7 +83,23 @@ export class RagService {
 
       // 4. Generate LLM response
       const response = await this.llmProvider.generateRagResponse(query, context);
-      response.sources = sources;
+      
+      // Determine which project cards to display independently of the LLM
+      // Only consider actual Projects for the UI cards
+      const projectSources = sources.filter(s => s.source && typeof s.source === 'string' && s.source.includes('"technologies":'));
+      
+      const maxRelevance = Math.max(...projectSources.map(s => s.relevance), 0);
+      
+      if (maxRelevance >= 0.30) {
+        // Specific Query: Enforce strict relevance. Only show projects that are strongly related.
+        response.sources = projectSources.filter(s => s.relevance >= 0.30);
+      } else {
+        // Broad Query: Top matches are weak (e.g. "show me some projects"). 
+        // Curate the top 2-3 most relevant projects to show.
+        response.sources = projectSources
+          .sort((a, b) => b.relevance - a.relevance)
+          .slice(0, 3);
+      }
 
       await this.logQuery(query, response.answer, startTime, chunks.length, similarityScores, true);
 
