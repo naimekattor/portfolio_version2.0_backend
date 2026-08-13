@@ -50,10 +50,31 @@ export class RagService {
         similarityScores.push(chunk.similarity);
         
         if (!addedSources.has(chunk.documentId)) {
+          let sourceData = chunk.source;
+          
+          // If it's a project, fetch the full project details for the frontend UI cards
+          if (chunk.sourceType === 'Project') {
+            try {
+              const project = await this.prisma.project.findUnique({ where: { id: chunk.source } });
+              if (project) {
+                sourceData = JSON.stringify({
+                  title: project.title,
+                  description: project.description,
+                  technologies: project.technologies,
+                  images: project.images,
+                  liveUrl: project.liveUrl,
+                  githubUrl: project.githubUrl
+                });
+              }
+            } catch (e) {
+              console.error('Failed to fetch project for AI source', e);
+            }
+          }
+
           sources.push({
             documentId: chunk.documentId,
             title: chunk.title,
-            source: chunk.source,
+            source: sourceData,
             relevance: chunk.similarity
           });
           addedSources.add(chunk.documentId);
