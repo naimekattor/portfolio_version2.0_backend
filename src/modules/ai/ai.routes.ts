@@ -6,14 +6,18 @@ import { RagRepository } from './rag/rag.repository.js';
 import { ChunkingService } from './rag/chunking.service.js';
 import { GeminiEmbeddingProvider } from './embedding/gemini-embedding.provider.js';
 import { GroqLlmProvider } from './llm/groq-llm.provider.js';
+import { LocalTransformerProvider } from './embedding/local-transformer.provider.js';
 import { prisma } from '../../database/prisma.js';
 import { authenticate } from '../../middlewares/auth.js';
+import { env } from '../../config/env.js';
 
 const router = Router();
 
 // DI Setup
 const ragRepo = new RagRepository(prisma);
-const embeddingProvider = new GeminiEmbeddingProvider();
+const embeddingProvider = env.EMBEDDING_PROVIDER === 'gemini' 
+  ? new GeminiEmbeddingProvider() 
+  : new LocalTransformerProvider();
 const llmProvider = new GroqLlmProvider();
 const chunkingService = new ChunkingService(3000);
 

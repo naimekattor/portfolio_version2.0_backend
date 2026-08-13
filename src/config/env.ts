@@ -31,6 +31,7 @@ const envSchema = z.object({
   GEMINI_API_KEY: z.string().optional(),
   ANTHROPIC_API_KEY: z.string().optional(),
   GROQ_API_KEY: z.string().optional(),
+  EMBEDDING_PROVIDER: z.string().default('local'),
 });
 
 export const env = envSchema.parse(process.env);

@@ -423,7 +423,7 @@ model RagChunk {
   tokenCount Int         @default(0)
   metadata   Json?       // chunk specific metadata
   // The vector embedding. This is an unsupported type in standard Prisma.
-  embedding  Unsupported("vector(768)")?
+  embedding  Unsupported("vector(384)")?
   createdAt  DateTime    @default(now())
   updatedAt  DateTime    @updatedAt
 
