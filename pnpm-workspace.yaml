@@ -1,8 +1,8 @@
 allowBuilds:
   '@google/genai': true
-  '@prisma/engines': set this to true or false
-  '@scarf/scarf': set this to true or false
-  esbuild: set this to true or false
-  prisma: set this to true or false
+  '@prisma/engines': true
+  '@scarf/scarf': true
+  esbuild: true
+  prisma: true
   protobufjs: true
   sharp: true

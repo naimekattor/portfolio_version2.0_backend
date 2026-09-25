@@ -3,15 +3,25 @@ import { IEmbeddingProvider } from '../interfaces/embedding.interface.js';
 import { env } from '../../../config/env.js';
 
 export class GeminiEmbeddingProvider implements IEmbeddingProvider {
-  private ai: GoogleGenAI;
+  private ai: GoogleGenAI | null = null;
   private modelName = 'text-embedding-004';
   private dimension = 768;
 
   constructor() {
-    this.ai = new GoogleGenAI({ apiKey: env.GEMINI_API_KEY || process.env.GEMINI_API_KEY });
+    const apiKey = env.GEMINI_API_KEY || process.env.GEMINI_API_KEY;
+    if (apiKey) {
+      try {
+        this.ai = new GoogleGenAI({ apiKey });
+      } catch (error) {
+        console.error('Failed to initialize GoogleGenAI client:', error);
+      }
+    }
   }
 
   async generateEmbedding(text: string): Promise<number[]> {
+    if (!this.ai) {
+      throw new Error('GEMINI_API_KEY is not configured in backend environment.');
+    }
     const response = await this.ai.models.embedContent({
       model: this.modelName,
       contents: text,
@@ -20,6 +30,9 @@ export class GeminiEmbeddingProvider implements IEmbeddingProvider {
   }
 
   async generateEmbeddings(texts: string[]): Promise<number[][]> {
+    if (!this.ai) {
+      throw new Error('GEMINI_API_KEY is not configured in backend environment.');
+    }
     const response = await this.ai.models.embedContent({
       model: this.modelName,
       contents: texts,

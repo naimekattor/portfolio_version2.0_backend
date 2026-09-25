@@ -5,8 +5,12 @@ import { logger } from '../utils/logger.js';
 import { env } from '../config/env.js';
 
 const connectionString = env.DATABASE_URL;
+const isCloudDb = connectionString.includes('neon.tech') || connectionString.includes('sslmode=require');
 
-const pool = new pg.Pool({ connectionString });
+const pool = new pg.Pool({
+  connectionString,
+  ssl: isCloudDb ? { rejectUnauthorized: false } : undefined,
+});
 
 // Prevent unhandled pg pool error events from crashing Node process
 pool.on('error', (err) => {

@@ -28,8 +28,33 @@ export class RagService {
       // 1. Generate query embedding
       const queryEmbedding = await this.embeddingProvider.generateEmbedding(query);
 
-      // 2. Retrieve top chunks (Top K = 15, threshold = 0.10 for local embeddings)
-      const chunks = await this.ragRepo.searchSimilarChunks(queryEmbedding, 15, 0.10);
+      // 2. Retrieve top chunks (Top K = 15, threshold = 0.08 for local embeddings)
+      let chunks = await this.ragRepo.searchSimilarChunks(queryEmbedding, 15, 0.08);
+
+      // If no chunks match 0.08, try lower threshold 0.00
+      if (chunks.length === 0) {
+        chunks = await this.ragRepo.searchSimilarChunks(queryEmbedding, 8, 0.00);
+      }
+
+      // If still empty (e.g. conversational greetings or broad queries), retrieve the Profile overview chunk as base context
+      if (chunks.length === 0) {
+        const profileDoc = await this.prisma.ragDocument.findFirst({
+          where: { sourceType: { in: ['Profile', 'Services'] } },
+          include: { chunks: true }
+        });
+        if (profileDoc && profileDoc.chunks.length > 0) {
+          chunks = profileDoc.chunks.map((c) => ({
+            id: c.id,
+            documentId: profileDoc.id,
+            content: c.content,
+            metadata: c.metadata,
+            title: profileDoc.title,
+            source: profileDoc.source,
+            sourceType: profileDoc.sourceType,
+            similarity: 0.5,
+          }));
+        }
+      }
 
       if (chunks.length === 0) {
         await this.logQuery(query, "No context found.", startTime, 0, [], true);

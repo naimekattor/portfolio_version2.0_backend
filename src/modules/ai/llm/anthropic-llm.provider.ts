@@ -3,13 +3,18 @@ import { ILLMProvider, RagResponse } from '../interfaces/llm.interface.js';
 import { env } from '../../../config/env.js';
 
 export class AnthropicLlmProvider implements ILLMProvider {
-  private anthropic: Anthropic;
+  private anthropic: Anthropic | null = null;
   private modelName = 'claude-3-5-sonnet-20240620';
 
   constructor() {
-    this.anthropic = new Anthropic({
-      apiKey: env.ANTHROPIC_API_KEY || process.env.ANTHROPIC_API_KEY,
-    });
+    const apiKey = env.ANTHROPIC_API_KEY || process.env.ANTHROPIC_API_KEY;
+    if (apiKey) {
+      try {
+        this.anthropic = new Anthropic({ apiKey });
+      } catch (error) {
+        console.error('Failed to initialize Anthropic client:', error);
+      }
+    }
   }
 
   async generateRagResponse(query: string, context: string): Promise<RagResponse> {
@@ -25,6 +30,13 @@ Return your response in JSON format matching this structure:
 Only include sources that were actually used to construct the answer.`;
 
     const userPrompt = `Context:\n${context}\n\nQuestion: ${query}`;
+
+    if (!this.anthropic) {
+      return {
+        answer: 'Anthropic service is not configured (ANTHROPIC_API_KEY missing in backend environment).',
+        sources: [],
+      };
+    }
 
     const response = await this.anthropic.messages.create({
       model: this.modelName,
