@@ -1,4 +1,9 @@
-import { pipeline, FeatureExtractionPipeline } from '@xenova/transformers';
+import { pipeline, FeatureExtractionPipeline, env } from '@xenova/transformers';
+
+// Ensure transformers uses /tmp in serverless environments
+env.cacheDir = '/tmp';
+env.useBrowserCache = false;
+env.allowLocalModels = false;
 
 export class EmbeddingModelManager {
   private static instance: EmbeddingModelManager;

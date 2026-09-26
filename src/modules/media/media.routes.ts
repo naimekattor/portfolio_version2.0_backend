@@ -1,6 +1,5 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import multer from 'multer';
-import sharp from 'sharp';
 import path from 'path';
 import fs from 'fs';
 import { prisma } from '../../database/prisma.js';
@@ -126,7 +125,13 @@ router.post('/upload', authenticate, upload.single('file'), async (req: Request,
     const outputPath = path.join(uploadDir, filename);
 
     if (req.file.mimetype.startsWith('image/') && !req.file.mimetype.includes('svg')) {
-      await sharp(req.file.buffer).webp({ quality: 85 }).toFile(outputPath);
+      try {
+        const sharpModule = await import('sharp');
+        const sharp = sharpModule.default || sharpModule;
+        await sharp(req.file.buffer).webp({ quality: 85 }).toFile(outputPath);
+      } catch (sharpError) {
+        fs.writeFileSync(outputPath, req.file.buffer);
+      }
     } else {
       fs.writeFileSync(outputPath, req.file.buffer);
     }
