@@ -30,10 +30,31 @@ export function createApp(): Express {
 
   // Security & Utility Middlewares
   app.use(helmet({ crossOriginResourcePolicy: false }));
+
+  const allowedOrigins = [
+    env.CORS_ORIGIN,
+    'http://localhost:3000',
+    'http://localhost:3001',
+    'https://naimdev-hazel.vercel.app',
+    'https://portfolio-version2-0-backend.vercel.app',
+  ].filter(Boolean);
+
   app.use(
     cors({
-      origin: [env.CORS_ORIGIN, 'http://localhost:3000', 'http://localhost:3001','https://portfolio-version2-0-backend.vercel.app'],
+      origin: (origin, callback) => {
+        if (!origin) return callback(null, true);
+        if (
+          allowedOrigins.includes(origin) ||
+          origin.endsWith('.vercel.app') ||
+          origin.includes('localhost')
+        ) {
+          return callback(null, true);
+        }
+        return callback(null, false);
+      },
       credentials: true,
+      methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+      allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Cookie'],
     })
   );
   app.use(compression());
