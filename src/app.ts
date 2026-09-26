@@ -71,23 +71,40 @@ export function createApp(): Express {
   app.use('/api/', limiter);
 
   // Static uploads directory
-  app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
+  const uploadStaticDir = process.env.VERCEL === '1' ? path.join('/tmp', 'uploads') : path.join(process.cwd(), 'uploads');
+  app.use('/uploads', express.static(uploadStaticDir));
 
   // Swagger Documentation Setup
-  const swaggerOptions = {
-    definition: {
-      openapi: '3.0.0',
-      info: {
-        title: 'Portfolio Backend API',
-        version: '1.0.0',
-        description: 'Production Express.js API with Prisma, Analytics, and Auth',
+  try {
+    const swaggerOptions = {
+      definition: {
+        openapi: '3.0.0',
+        info: {
+          title: 'Portfolio Backend API',
+          version: '1.0.0',
+          description: 'Production Express.js API with Prisma, Analytics, and Auth',
+        },
+        servers: [{ url: `/api/v1` }],
       },
-      servers: [{ url: `http://localhost:${env.PORT}/api/v1` }],
-    },
-    apis: ['./src/modules/**/*.routes.ts'],
-  };
-  const swaggerSpec = swaggerJSDoc(swaggerOptions);
-  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+      apis: ['./src/modules/**/*.routes.ts', './dist/modules/**/*.routes.js'],
+    };
+    const swaggerSpec = swaggerJSDoc(swaggerOptions);
+    app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+  } catch (e) {
+    // Ignore swagger failure in serverless environments
+  }
+
+  // Root endpoint
+  app.get('/', (req, res) => {
+    res.json({
+      name: 'Portfolio Backend API',
+      status: 'active',
+      version: '1.0.0',
+      health: '/health',
+      docs: '/api-docs',
+      api: '/api/v1',
+    });
+  });
 
   // Health check endpoint
   app.get('/health', (req, res) => {

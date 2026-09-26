@@ -11,9 +11,14 @@ import { isCloudinaryReady, uploadStreamToCloudinary, deleteFromCloudinary } fro
 
 const router = Router();
 
-const uploadDir = path.join(process.cwd(), 'uploads');
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
+const isServerless = process.env.VERCEL === '1' || process.env.AWS_LAMBDA_FUNCTION_NAME !== undefined;
+const uploadDir = isServerless ? path.join('/tmp', 'uploads') : path.join(process.cwd(), 'uploads');
+try {
+  if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+  }
+} catch (e) {
+  // Ignore filesystem error in read-only environment
 }
 
 const storage = multer.memoryStorage();
