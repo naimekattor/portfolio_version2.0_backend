@@ -1,9 +1,4 @@
-import { pipeline, FeatureExtractionPipeline, env } from '@xenova/transformers';
-
-// Ensure transformers uses /tmp in serverless environments
-env.cacheDir = '/tmp';
-env.useBrowserCache = false;
-env.allowLocalModels = false;
+import type { FeatureExtractionPipeline } from '@xenova/transformers';
 
 export class EmbeddingModelManager {
   private static instance: EmbeddingModelManager;
@@ -22,25 +17,34 @@ export class EmbeddingModelManager {
   }
 
   /**
-   * Lazily loads the embedding model as a singleton.
+   * Lazily loads the embedding model as a singleton using dynamic import for ESM compatibility in CommonJS runtime.
    */
   public async getExtractor(): Promise<FeatureExtractionPipeline> {
     if (!this.extractor) {
       console.log(`[Embedding] Initializing local model: ${this.modelName}`);
       
-      // Load pipeline in background
-      this.extractor = pipeline('feature-extraction', this.modelName, {
-        quantized: true, // Use quantized for lower memory
-      }).then((pipe) => {
+      this.extractor = (async () => {
+        // Dynamically import ESM package @xenova/transformers
+        const transformers = await import('@xenova/transformers');
+
+        // Configure transformers environment for serverless /tmp
+        transformers.env.cacheDir = '/tmp';
+        transformers.env.useBrowserCache = false;
+        transformers.env.allowLocalModels = false;
+
+        const pipe = await transformers.pipeline('feature-extraction', this.modelName, {
+          quantized: true,
+        });
+
         console.log(`[Embedding] Model ${this.modelName} loaded successfully.`);
         return pipe as FeatureExtractionPipeline;
-      }).catch((err) => {
+      })().catch((err) => {
         console.error(`[Embedding] Failed to load model ${this.modelName}`, err);
         this.extractor = null;
         throw err;
       });
     }
     
-    return this.extractor!;
+    return this.extractor;
   }
 }
