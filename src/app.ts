@@ -32,7 +32,7 @@ export function createApp(): Express {
   app.use(helmet({ crossOriginResourcePolicy: false }));
   app.use(
     cors({
-      origin: [env.CORS_ORIGIN, 'http://localhost:3000', 'http://localhost:3001'],
+      origin: [env.CORS_ORIGIN, 'http://localhost:3000', 'http://localhost:3001','https://portfolio-version2-0-backend.vercel.app'],
       credentials: true,
     })
   );
