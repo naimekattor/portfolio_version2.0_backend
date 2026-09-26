@@ -113,16 +113,16 @@ export class RagService {
       // Only consider actual Projects for the UI cards
       const projectSources = sources.filter(s => s.source && typeof s.source === 'string' && s.source.includes('"technologies":'));
       
-      const maxRelevance = Math.max(...projectSources.map(s => s.relevance), 0);
+      const maxRelevance = Math.max(...projectSources.map(s => s.relevance ?? 0), 0);
       
       if (maxRelevance >= 0.30) {
         // Specific Query: Enforce strict relevance. Only show projects that are strongly related.
-        response.sources = projectSources.filter(s => s.relevance >= 0.30);
+        response.sources = projectSources.filter(s => (s.relevance ?? 0) >= 0.30);
       } else {
         // Broad Query: Top matches are weak (e.g. "show me some projects"). 
         // Curate the top 2-3 most relevant projects to show.
         response.sources = projectSources
-          .sort((a, b) => b.relevance - a.relevance)
+          .sort((a, b) => (b.relevance ?? 0) - (a.relevance ?? 0))
           .slice(0, 3);
       }
 
