@@ -67,19 +67,59 @@ export class ProjectsService {
     return prisma.project.findUnique({ where: { slug } });
   }
 
+  private formatProjectPayload(data: any) {
+    const payload = { ...data };
+
+    // Format technologies
+    if (typeof payload.technologies === 'string') {
+      payload.technologies = payload.technologies
+        .split(',')
+        .map((s: string) => s.trim())
+        .filter(Boolean);
+    }
+
+    // Format images (handling array, comma-separated string, and secondaryImage)
+    let images: string[] = [];
+    if (Array.isArray(payload.images)) {
+      images = payload.images.map((s: any) => String(s).trim()).filter(Boolean);
+    } else if (typeof payload.images === 'string') {
+      images = payload.images
+        .split(',')
+        .map((s: string) => s.trim())
+        .filter(Boolean);
+    } else if (payload.image) {
+      images = [String(payload.image).trim()];
+    }
+
+    if (payload.secondaryImage && !images.includes(payload.secondaryImage)) {
+      if (images.length === 0) images.push('/hokpath.png');
+      images.push(String(payload.secondaryImage).trim());
+    }
+
+    if (images.length > 0) {
+      payload.images = images;
+    }
+    delete payload.secondaryImage;
+    delete payload.image;
+
+    return payload;
+  }
+
   async create(data: any) {
-    const slug = data.slug || data.title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+    const formatted = this.formatProjectPayload(data);
+    const slug = formatted.slug || formatted.title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
     return prisma.project.create({
-      data: { ...data, slug },
+      data: { ...formatted, slug },
     });
   }
 
   async update(id: string, data: any) {
     const { id: _, createdAt, updatedAt, deletedAt, ...updateData } = data;
-    if (updateData.title && !updateData.slug) {
-      updateData.slug = updateData.title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+    const formatted = this.formatProjectPayload(updateData);
+    if (formatted.title && !formatted.slug) {
+      formatted.slug = formatted.title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
     }
-    return prisma.project.update({ where: { id }, data: updateData });
+    return prisma.project.update({ where: { id }, data: formatted });
   }
 
   async delete(id: string) {
